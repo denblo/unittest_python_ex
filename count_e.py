@@ -11,6 +11,3 @@ def count_e(digits):
         if d == 0:
             break
     return "2.%s" % str(fract)[:digits]
-
-
-
