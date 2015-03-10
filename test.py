@@ -1,0 +1,15 @@
+import unittest
+#from count_e import count_e
+from count_e_fixed import count_e
+
+ETALON_E ="2.71828182845904523536028747135266249775724709369995957496696762772407663035354759457138217852516642742746639193200305992181741359662904357290033429526059563073813232862794349076323382988075319525101901157383418793070215408914993488416750924476146066808226480016847741185374234544243710753907774499206955170276183860626133138458300075204493382656029760"
+
+class TestCountE(unittest.TestCase):
+    def test_basic(self):
+        self.assertEqual(count_e(0), ETALON_E[:2])
+
+    def test_main_part_range1to300(self):
+        for digits in range(1, 350):
+        #for digits in [1, 10, 50, 100, 200, 300, 350]:
+            e = count_e(digits)
+            self.assertEqual(count_e(digits), ETALON_E[:digits+2], "Test with digits = %d" % digits)
