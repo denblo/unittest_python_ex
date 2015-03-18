@@ -1,4 +1,5 @@
 from threading import Thread
+from time import sleep
 from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
 from queue import Queue, Empty
@@ -21,9 +22,14 @@ class BullyFullImpl:
         self.communicator = Communicator()
         self.bully = Bully(servers, myself, self.communicator)
         self.queue = Queue()
-        self.thread = Thread(target=self._on_bully)
+        self.thread = Thread(target=self._thread)
+        self.mess_thread = Thread(target=self.process_messages)
         self.flag_stop = False
         self.thread.start()
+        self.mess_thread.start()
+        
+        self.tick_thread = Thread(target=self._on_tick_thread)
+        self.tick_thread.start()
 
     def close(self):
         self.flag_stop = True
@@ -33,6 +39,8 @@ class BullyFullImpl:
         except:
             pass
         self.thread.join()
+        self.tick_thread.join()
+        self.mess_thread.join()
 
     def _thread(self):
         self.server = SimpleXMLRPCServer(self.listen_addr)
@@ -40,18 +48,25 @@ class BullyFullImpl:
         self.server.serve_forever()
 
     def _on_bully(self, index):
+        print("on BULLY by ", index)
         if index >= 0:
-            self.queue.add(index)
+            self.queue.put(index)
             return True
         else:
             self.server.server_close()
 
     def process_messages(self):
+        print("process")
         try:
             while True:
                 self.bully.on_bully(self.queue.get())
         except Empty:
             pass
+        
+    def _on_tick_thread(self):
+        while True:
+            self.bully.on_tick()
+            sleep(1)
 
 
 class Bully:
@@ -67,6 +82,7 @@ class Bully:
         self.is_master = False
 
     def _am_i_the_chosen(self):
+        print('im choosen', self.index)
         self.is_master = not any(t <= self.TICKS_BEFORE_BULLYING for t in self.tick_counters[:self.index])
         self.tick_counters = [t + 1 for t in self.tick_counters]
 
@@ -83,6 +99,7 @@ class Bully:
         return True
 
     def on_tick(self):
+        print("ON TICK")
         if self.is_master:
             self._tell_to_shut_up()
         else:
