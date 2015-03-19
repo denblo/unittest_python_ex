@@ -7,8 +7,11 @@ from queue import Queue, Empty
 
 class Communicator:
     def _thread(self, server, index):
-        p = ServerProxy(server)
-        p.on_bully(index)
+        try:
+            p = ServerProxy(server)
+            p.on_bully(index)
+        except Exception:
+            pass
 
     def communicate_multiple(self, servers, index):
         for s in servers:
@@ -40,7 +43,7 @@ class BullyFullImpl:
     def close(self):
         self.flag_stop = True
 
-        #self.server.server_close()
+        self.server.server_close()
         #self.thread.join()
         #self.tick_thread.join()
         #self.mess_thread.join()

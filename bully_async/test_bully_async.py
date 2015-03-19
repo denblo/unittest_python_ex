@@ -44,31 +44,13 @@ class BullyTestCase(unittest.TestCase):
         sleep(2)
         self.assertTrue(bully1.bully.is_master)
         self.assertFalse(bully2.bully.is_master)
-        sleep(2)
-
-        self.assertFalse(bully2.bully.is_master)
-        
         bully1.close()
+        sleep(10)
+
+        self.assertTrue(bully2.bully.is_master)
+        
         bully2.close()
         bully3.close()
-
-
-    #     bully.on_tick()
-    #     self.assertFalse(bully.is_master)
-    #     bully.on_tick()
-    #     self.assertFalse(bully.is_master)
-    #     self.assertTrue(bully.on_bully(2))
-
-
-    #     for i in range(Bully.TICKS_BEFORE_BULLYING):
-    #         self.assertFalse(bully.is_master)
-    #         bully.on_tick()
-    #     self.assertTrue(bully.is_master)
-    #     self.assertFalse(bully.on_bully(0))
-    #     self.assertFalse(bully.is_master)
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
