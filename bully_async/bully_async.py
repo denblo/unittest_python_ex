@@ -21,11 +21,14 @@ class BullyFullImpl:
         self.listen_addr = listen_addr
         self.communicator = Communicator()
         self.bully = Bully(servers, myself, self.communicator)
-        self.queue = Queue()
-        self.thread = Thread(target=self._thread)
-        self.mess_thread = Thread(target=self.process_messages)
+        #self.queue = Queue()
+
         self.flag_stop = False
+
+        self.thread = Thread(target=self._thread)
         self.thread.start()
+
+        self.mess_thread = Thread(target=self.process_messages)
         self.mess_thread.start()
         
         self.tick_thread = Thread(target=self._on_tick_thread)
@@ -33,11 +36,7 @@ class BullyFullImpl:
 
     def close(self):
         self.flag_stop = True
-        try:
-            s = ServerProxy(self.myself)
-            s.on_bully(-1)
-        except:
-            pass
+
         self.thread.join()
         self.tick_thread.join()
         self.mess_thread.join()
@@ -45,10 +44,10 @@ class BullyFullImpl:
     def _thread(self):
         self.server = SimpleXMLRPCServer(self.listen_addr)
         self.server.register_function(self._on_bully, 'on_bully')
-        self.server.serve_forever()
+        while not self.flag_stop:
+            self.server.handle_request()
 
     def _on_bully(self, index):
-        print("on BULLY by ", index)
         if index >= 0:
             self.queue.put(index)
             return True
@@ -56,15 +55,14 @@ class BullyFullImpl:
             self.server.server_close()
 
     def process_messages(self):
-        print("process")
         try:
-            while True:
+            while not self.flag_stop:
                 self.bully.on_bully(self.queue.get())
         except Empty:
             pass
         
     def _on_tick_thread(self):
-        while True:
+        while not self.flag_stop:
             self.bully.on_tick()
             sleep(1)
 
@@ -82,7 +80,6 @@ class Bully:
         self.is_master = False
 
     def _am_i_the_chosen(self):
-        print('im choosen', self.index)
         self.is_master = not any(t <= self.TICKS_BEFORE_BULLYING for t in self.tick_counters[:self.index])
         self.tick_counters = [t + 1 for t in self.tick_counters]
 
@@ -99,7 +96,6 @@ class Bully:
         return True
 
     def on_tick(self):
-        print("ON TICK")
         if self.is_master:
             self._tell_to_shut_up()
         else:

@@ -4,7 +4,12 @@ from unittest.mock import MagicMock
 
 from bully_async import Bully
 from bully_async import BullyFullImpl
+from threading import setprofile
 
+def profilethread(a, b, c):
+    print("thread start", a, b)
+
+setprofile(profilethread)
 
 class BullyTestCase(unittest.TestCase):
     def test_single(self):
@@ -12,12 +17,11 @@ class BullyTestCase(unittest.TestCase):
         bully = BullyFullImpl(['http://localhost:11001'], 'http://localhost:11001', ('localhost', 11001) )
         self.assertFalse(bully.bully.is_master)
         
-        sleep(5)
+        sleep(2)
         
         self.assertTrue(bully.bully.is_master)
-        
+
         bully.close()
-        
 
     # def test_1_of_2(self):
     #     m = MagicMock(side_effect=lambda a, b: True)
